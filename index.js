@@ -1,12 +1,9 @@
 require('dotenv').config();
+
 const {
   Client,
   GatewayIntentBits,
-  Partials,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder
+  Partials
 } = require('discord.js');
 
 const client = new Client({
@@ -18,79 +15,38 @@ const client = new Client({
   partials: [Partials.Channel]
 });
 
-// 🔧 CONFIGURACIÓN
-const PANEL_CHANNEL_ID = '1468368365419757643';
-const CANAL_PRIVADO_ID = '1468376954037211197';
-
-// ✅ BOT LISTO
 client.once('ready', () => {
-  console.log(`📺 Bot Chilevisión conectado como ${client.user.tag}`);
+  console.log(`✅ Bot conectado como ${client.user.tag}`);
 });
 
-// 📩 COMANDO !panel
-client.on('messageCreate', async (message) => {
-  if (message.author.bot) return;
-  if (message.content !== '!panel') return;
-  if (message.channel.id !== PANEL_CHANNEL_ID) return;
-
-  const embed = new EmbedBuilder()
-    .setTitle('📺 Chilevisión Noticias')
-    .setDescription(
-      '**¿Por qué vienes a Chilevisión?**\nServidor oficial de **Chileviva Roleplay**'
-    )
-    .setColor('#e50914');
-
-  const botones = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('trabajar')
-      .setLabel('🛠️ A trabajar')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId('noticias')
-      .setLabel('📰 A ver noticias')
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId('publicidad')
-      .setLabel('📣 A publicitar mi negocio')
-      .setStyle(ButtonStyle.Success)
-  );
-
-  await message.channel.send({
-    embeds: [embed],
-    components: [botones]
-  });
-});
-
-// 🔘 BOTONES
-client.on('interactionCreate', async (interaction) => {
+client.on('interactionCreate', async interaction => {
   if (!interaction.isButton()) return;
 
-  const opciones = {
-    trabajar: '🛠️ A trabajar',
-    noticias: '📰 A ver noticias',
-    publicidad: '📣 A publicitar mi negocio'
-  };
+  try {
+    // 🔒 evita doble reply (esto es CLAVE)
+    if (interaction.replied || interaction.deferred) return;
 
-  if (!opciones[interaction.customId]) return;
+    if (interaction.customId === 'general') {
+      await interaction.reply({
+        content: '📩 Ticket general creado',
+        ephemeral: true
+      });
+    }
 
-  const canal = await interaction.guild.channels.fetch(CANAL_PRIVADO_ID);
-
-  const embedResultado = new EmbedBuilder()
-    .setTitle('📥 Nueva solicitud Chilevisión')
-    .addFields(
-      { name: '👤 Usuario', value: interaction.user.tag },
-      { name: '📌 Motivo', value: opciones[interaction.customId] }
-    )
-    .setColor('#e50914')
-    .setTimestamp();
-
-  await canal.send({ embeds: [embedResultado] });
-
-  await interaction.reply({
-    content: '✅ Tu solicitud fue enviada al equipo de Chilevisión.',
-    ephemeral: true
-  });
+  } catch (error) {
+    console.error('❌ Error en interacción:', error);
+  }
 });
 
-// 🔐 LOGIN
-client.login(process.env.TOKEN);
+client.login(process.env.DISCORD_TOKEN);
+
+const http = require("http");
+
+const PORT = process.env.PORT || 8000;
+
+http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("Bot activo y funcionando");
+}).listen(PORT, () => {
+  console.log(`🌐 Servidor web escuchando en el puerto ${PORT}`);
+});
